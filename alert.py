@@ -1,6 +1,18 @@
 from datetime import datetime, timedelta
 import time
 import smtplib
+import webbrowser
+
+sender = "jeromehallett@hotmail.co.uk"
+receivers = ["jeromehallett@hotmail.co.uk"]
+subject = "Test"
+alert_msg = "This is a test e-mail message."
+try:
+    smtpObj = smtplib.SMTP('localhost')
+    smtpObj.sendmail(sender, receiver, alert_msg)
+    print("Successfully sent email")
+except SMTPException:
+    print("Error: unable to send email")
 
 
 if temp > temp_thresh and flag != True:
@@ -11,7 +23,7 @@ if temp > temp_thresh and flag != True:
             print 'alert'
             try:
               smtpObj = smtplib.SMTP('localhost')
-              smtpObj.sendmail(sender, receivers, alert_msg)
+              smtpObj.sendmail(sender, receiver, alert_msg)
               print "Successfully sent email"
             except SMTPException:
               print "Error: unable to send email"

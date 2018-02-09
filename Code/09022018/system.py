@@ -7,7 +7,8 @@ import machine
 from machine import Pin,I2C
 
 i2cport = I2C(scl=Pin(5), sda=Pin(4), freq=100000)
-# button = Pin(12, Pin.IN)
+button = Pin(16, Pin.IN)
+#LED = Pin(14, Pin.OUT)
 
 
 rtc = machine.RTC()
@@ -79,6 +80,10 @@ def sub_time(topic, msg):
     print(rtc.datetime())
     #print(rtc.hours)
 
+#Waits until button is pressed before opening communications
+while button == 0:
+    pass
+
 ap_if = network.WLAN(network.AP_IF)
 ap_if.active(False)
 sta_if = network.WLAN(network.STA_IF)
@@ -97,8 +102,17 @@ time.sleep(0.5)
 client.subscribe("esys/time")
 client.wait_msg()
 
-
-
+# threshfetch receives threshold values from the broker
+#def threshfetch()
+#turn on LED to represent thresholds ave been received
+#LED.value() = 1
+#Waits until button is pressed before starting log
+# while button == 0:
+#     pass
+# Turn off LED to save power
+#LED.value() = 0
+#Start Logging data
+#log(t_temp, t_accel)
 
 def run():
     year, month, day, weekday, hour, minutes, seconds, subseconds = rtc.datetime()

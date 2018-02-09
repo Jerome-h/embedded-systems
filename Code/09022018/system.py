@@ -7,7 +7,7 @@ import machine
 from machine import Pin,I2C
 
 i2cport = I2C(scl=Pin(5), sda=Pin(4), freq=100000)
-button = Pin(12, Pin.IN)
+# button = Pin(12, Pin.IN)
 
 
 rtc = machine.RTC()
@@ -111,15 +111,11 @@ def run():
 
 
 def log(t_temp, t_accel):
-    # Requires button press to start logging
-    while button.value() == 0:
-        pass
     oldtemp = 0
     oldx=0
     oldy=0
     oldz=0
-    # Logging while loop will break if button is pressed again
-    while button.value() ==0:
+    while True:
         xknock=False
         yknock=False
         zknock=False

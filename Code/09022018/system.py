@@ -105,12 +105,12 @@ client.wait_msg()
 # threshfetch receives threshold values from the broker
 #def threshfetch()
 #turn on LED to represent thresholds ave been received
-#LED.value() = 1
+#LED.on()
 #Waits until button is pressed before starting log
 # while button == 0:
 #     pass
 # Turn off LED to save power
-#LED.value() = 0
+#LED.off()
 #Start Logging data
 #log(t_temp, t_accel)
 

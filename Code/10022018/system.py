@@ -12,40 +12,66 @@ LED = Pin(14, Pin.OUT)
 
 rtc = machine.RTC()
 
+global t_accel, t_temp, t_humid
+
+t_accel, t_temp, t_humid = 0, 0, 0
+
 def readtemp():
     #send the read temperature command
-    i2cport.writeto(0x40,bytearray([0xf3]))
+    i2cport.writeto(0x44,bytearray([0xf3]))
 
     #read two bytes of data
     #data=i2cport.readfrom(0x40,2)  This didnt work
-    data=i2cport.readfrom_mem(0x40,0x01,2)
+    data=i2cport.readfrom_mem(0x44,0x01,2)
 
     #convert the two bytes to an int
     rawtemp = int.from_bytes(data,'big')
     temp = float(rawtemp)/100	#convert into Celsius
 
     #print(temp)     #print temperature
-    return(temp)
+    return temp
 
-def sub_time(topic, msg):
-    print(msg.decode('utf-8'))
-    clock = msg.decode('utf-8')
-    datedata = clock.split("T")[0]
-    clockdata = clock.split("T")[1]
-    timedata = clockdata.split("+")[0]
-    year = datedata.split("-")[0]
-    month = datedata.split("-")[1]
-    day = datedata.split("-")[2]
-    hours = timedata.split(":")[0]
-    minutes = timedata.split(":")[1]
-    seconds = timedata.split(":")[2]
 
-    rtc.datetime((int(year), int(month), int(day), 0, int(hours), int(minutes), int(seconds), 0))
-    print(rtc.datetime())
-    #print(rtc.hours)
+def readhum():
+    # send the read temperature command
+    i2cport.writeto(0x40, bytearray([0xe5]))
 
-def log(t_temp, t_accel):
+    # read two bytes of data
+    data1 = i2cport.readfrom(0x40, 2)
+    finaldata1 = int.from_bytes(data1, 'big')
+    humfinal = ((125 * finaldata1) / 65536) - 6
+
+    #print(humfinal)     #print humidity
+    return humfinal
+
+def sub_msg(topic, msg):
+    global t_accel, t_temp, t_humid
+    if topic == "esys/time":
+        print(msg.decode('utf-8'))
+        clock = msg.decode('utf-8')
+        datedata = clock.split("T")[0]
+        clockdata = clock.split("T")[1]
+        timedata = clockdata.split("+")[0]
+        year = datedata.split("-")[0]
+        month = datedata.split("-")[1]
+        day = datedata.split("-")[2]
+        hours = timedata.split(":")[0]
+        minutes = timedata.split(":")[1]
+        seconds = timedata.split(":")[2]
+    
+        rtc.datetime((int(year), int(month), int(day), 0, int(hours), int(minutes), int(seconds), 0))
+        print(rtc.datetime())
+        #print(rtc.hours)
+    elif topic == "/esys/mdeded/thresholds/":
+        thresholds = json.loads(msg.payload)
+        t_accel = thresholds["accel"]
+        t_temp = thresholds["temp"]
+        t_humid = thresholds["humid"]
+
+def log():
+    global t_accel, t_temp, t_humid
     oldtemp = 0
+    oldhum = 0
     oldx=0
     oldy=0
     oldz=0
@@ -93,6 +119,8 @@ def log(t_temp, t_accel):
             knock = True
 
         temp = readtemp()-10
+        humidity = readhum()
+
         year, month, day, weekday, hour, minutes, seconds, subseconds = rtc.datetime()
         clocktime = "%d:%d:%d" % (hour, minutes, seconds)
         if temp > oldtemp+t_temp or temp < oldtemp-t_temp:
@@ -107,6 +135,7 @@ def log(t_temp, t_accel):
             print(payload)
             client.publish('/esys/mdeded/',bytes(payload,'utf-8'))
             oldtemp = temp
+
 
 #Waits until button is pressed before opening communications
 while button == 0:
@@ -124,23 +153,26 @@ print(sta_if.isconnected())
 
 #CLIENT_ID = machine.unique_id()
 client = MQTTClient('50688','192.168.0.10')
-client.set_callback(sub_time)
+client.set_callback(sub_msg)
 client.connect()
 time.sleep(0.5)
 client.subscribe("esys/time")
 client.wait_msg()
 
-# threshfetch receives threshold values from the broker
-#def threshfetch()
+#Subscribes to topic which user passes threshold values to
+client.subscribe("/esys/mdeded/thresholds/")
+while t_temp == 0:
+    client.wait_msg()
+
 #turn on LED to represent thresholds ave been received
-#LED.on()
+LED.on()
 #Waits until button is pressed before starting log
-# while button == 0:
-#     pass
+while button == 0:
+    pass
 # Turn off LED to save power
-#LED.off()
+LED.off()
 #Start Logging data
-#log(t_temp, t_accel)
+log()
 
 
 

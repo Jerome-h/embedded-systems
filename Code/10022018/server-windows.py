@@ -11,15 +11,20 @@ import matplotlib.pyplot as plt
 global oldmsg
 #oldmsg=0
 temps = []
+#times = []
 
 
 def graph(temps,refresh):
+    #dates = matplotlib.dates.date2num(times)
+    #plt.plot_date(dates, temps,'r',label='^C',marker='o')
     plt.plot(temps,'r',label='^C',marker='o')
     plt.legend()
     axes = plt.gca()
     plt.draw()
     plt.pause(refresh)
     plt.clf()
+#dates = matplotlib.dates.date2num(times)
+#matplotlib.pyplot.plot_date(dates, temps)
 
 # The callback for when the client receives a CONNACK response from the server.
 def on_connect(client, userdata, flags, rc):
@@ -41,10 +46,15 @@ def on_message(client, userdata, msg):
         #data = json.loads(str(msg.payload))
         data = json.loads(msg.payload)
         temps.append(data["temp"])
+        #datetime.strptime("02/05/2017","%m/%d/%Y")
+        #times.append(data["time"])
         graph(temps,1)
+        #print("time: " + [data["time"]])
+        #print("temp: " + [data["time"]])
+        #print("humid: " + [data["humid"]])
         with open('data.csv', 'a') as csvfile:
             datafile = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-            datafile.writerow([data["time"]] + [data["temp"]])
+            datafile.writerow([data["time"]] + [data["temp"]] + [data["humid"]])
 
     #try:
     #    value = int(msg.payload.split(":")[0])
@@ -63,6 +73,12 @@ client.on_connect = on_connect
 client.on_message = on_message
 
 client.connect("192.168.0.10", 1883, 60)
+
+accel=10000
+temp=0.3
+humid=1
+thresholds = json.dumps({'accel':accel, 'temp':temp, "humid":humid})
+client.publish('/esys/mdeded/thresholds/',bytes(thresholds,'utf-8'))
 
 
 # Blocking call that processes network traffic, dispatches callbacks and

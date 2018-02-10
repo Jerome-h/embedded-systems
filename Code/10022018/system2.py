@@ -77,10 +77,6 @@ def log():
     oldy=0
     oldz=0
     while True:
-        print(oldx)
-        print(oldy)
-        print(oldz)
-        print("\n")
         xknock=False
         yknock=False
         zknock=False
@@ -107,10 +103,6 @@ def log():
         if zaccel>0x7fff:
             zaccel = zaccel - 0x10000
 
-        print(xaccel)
-        print(yaccel)
-        print(zaccel)
-        print("\n\n\n")
 
         if xaccel>oldx+t_accel or xaccel<oldx-t_accel:
             knock="ALERT: x axis"

@@ -12,9 +12,18 @@ LED = Pin(14, Pin.OUT)
 
 rtc = machine.RTC()
 
-global t_accel, t_temp, t_humid
+min_temp = inputs["mintemp"]
+max_temp = inputs["maxtemp"]
+min_humid = inputs["minhumid"]
+max_humid = inputs["maxhumid"]
 
-t_accel, t_temp, t_humid = float(0), float(0), float(0)
+global d_accel, d_temp, d_humid
+global min_temp, max_temp, min_humid, max_humid
+global oldx , oldy, oldz
+
+d_accel, d_temp, d_humid = float(0), float(0), float(0)
+min_temp, max_temp, min_humid, max_humid = float(0), float(0), float(0), float(0)
+oldx , oldy, oldz = 0, 0, 0
 
 def readtemp():
     #send the read temperature command
@@ -31,22 +40,61 @@ def readtemp():
     #print(temp)     #print temperature
     return temp
 
-
-def readhum():
+def readhumid():
     # send the read temperature command
     i2cport.writeto(0x40, bytearray([0xe5]))
     time.sleep(0.3)
     # read two bytes of data
     data1 = i2cport.readfrom(0x40, 2)
     finaldata1 = int.from_bytes(data1, 'big')
-    humfinal = ((125 * finaldata1) / 65536) - 6
+    humidfinal = ((125 * finaldata1) / 65536) - 6
 
-    #print(humfinal)     #print humidity
-    return humfinal
+    #print(humidfinal)     #print humidity
+    return humidfinal
 
+def readknock():
+    global d_accel, oldx, oldy, oldz
+    xknock, yknock, zknock, knock = False, False, False, False
+
+    i2cport.writeto(0x18, bytearray([0x20, 0x97]))
+    xsmall = i2cport.readfrom_mem(0x18, 0x28, 1)
+    xbig = i2cport.readfrom_mem(0x18, 0x29, 1)
+    x = xbig + xsmall
+    ysmall = i2cport.readfrom_mem(0x18, 0x2a, 1)
+    ybig = i2cport.readfrom_mem(0x18, 0x2b, 1)
+    y = ybig + ysmall
+    zsmall = i2cport.readfrom_mem(0x18, 0x2c, 1)
+    zbig = i2cport.readfrom_mem(0x18, 0x2d, 1)
+    z = zbig + zsmall
+
+    # convert the two bytes to an int
+    xaccel = int.from_bytes(x, 'big')
+    if xaccel > 0x7fff:
+        xaccel = xaccel - 0x10000
+    yaccel = int.from_bytes(y, 'big')
+    if yaccel > 0x7fff:
+        yaccel = yaccel - 0x10000
+    zaccel = int.from_bytes(z, 'big')
+    if zaccel > 0x7fff:
+        zaccel = zaccel - 0x10000
+
+    if xaccel > oldx + d_accel or xaccel < oldx - d_accel:
+        xknock = True
+        oldx = xaccel
+    if yaccel > oldy + d_accel or yaccel < oldy - d_accel:
+        yknock = True
+        oldy = yaccel
+    if zaccel > oldz + d_accel or zaccel < oldz - d_accel:
+        zknock = True
+        oldz = zaccel
+
+    if xknock or yknock or zknock:
+        knock = True
+        # print("knocked")
+    return knock
 
 def sub_msg(topic, msg):
-    global t_accel, t_temp, t_humid
+    global d_accel, d_temp, d_humid
     if topic.decode('utf-8') == "esys/time":
         print(msg.decode('utf-8'))
         clock = msg.decode('utf-8')
@@ -63,86 +111,49 @@ def sub_msg(topic, msg):
         rtc.datetime((int(year), int(month), int(day), 0, int(hours), int(minutes), int(seconds), 0))
         print(rtc.datetime())
         #print(rtc.hours)
-    elif topic.decode('utf-8') == "/esys/mdeded/thresholds/":
+    elif topic.decode('utf-8') == "/esys/mdeded/inputs/":
         print(msg.decode('utf-8'))
-        thresholds = json.loads(msg.decode('utf-8'))
-        t_accel = thresholds["accel"]
-        t_temp = thresholds["temp"]
-        t_humid = thresholds["humid"]
+        inputs = json.loads(msg.decode('utf-8'))
+        d_accel = inputs["accel"]
+        d_temp = inputs["temp"]
+        d_humid = inputs["humid"]
+        min_temp = inputs["mintemp"]
+        max_temp = inputs["maxtemp"]
+        min_humid = inputs["minhumid"]
+        max_humid = inputs["maxhumid"]
+
 
 def log():
-    global t_accel, t_temp, t_humid
+    global d_temp, d_humid, min_temp, max_temp, min_humid, max_humid
     oldtemp = 0
-    oldhum = 0
-    oldx=0
-    oldy=0
-    oldz=0
+    oldhumid = 0
     while True:
-        xknock=False
-        yknock=False
-        zknock=False
-        knock=False
-        i2cport.writeto(0x18,bytearray([0x20,0x97]))
-        xsmall=i2cport.readfrom_mem(0x18,0x28,1)
-        xbig=i2cport.readfrom_mem(0x18,0x29,1)
-        x = xbig + xsmall
-        ysmall=i2cport.readfrom_mem(0x18,0x2a,1)
-        ybig=i2cport.readfrom_mem(0x18,0x2b,1)
-        y = ybig + ysmall
-        zsmall=i2cport.readfrom_mem(0x18,0x2c,1)
-        zbig=i2cport.readfrom_mem(0x18,0x2d,1)
-        z = zbig + zsmall
-
-        #convert the two bytes to an int
-        xaccel = int.from_bytes(x,'big')
-        if xaccel>0x7fff:
-            xaccel = xaccel - 0x10000
-        yaccel = int.from_bytes(y,'big')
-        if yaccel>0x7fff:
-            yaccel = yaccel - 0x10000
-        zaccel = int.from_bytes(z,'big')
-        if zaccel>0x7fff:
-            zaccel = zaccel - 0x10000
-
-
-        if xaccel>oldx+t_accel or xaccel<oldx-t_accel:
-            knock="ALERT: x axis"
-            xknock=True
-            oldx = xaccel
-        if yaccel>oldy+t_accel or yaccel<oldy-t_accel:
-            knock="ALERT: y axis"
-            yknock=True
-            oldy = yaccel
-        if zaccel>oldz+t_accel or zaccel<oldz-t_accel:
-            knock="ALERT: z axis"
-            zknock=True
-            oldz = zaccel
-
-        if xknock or yknock or zknock:
-            knock = True
-            xknock = False
-            yknock = False
-            zknock = False
-            print("knocked")
-
         temp = readtemp()-10
-        humidity = readhum()
+        humid = readhumid()
+        knock = readknock()
 
         year, month, day, weekday, hour, minutes, seconds, subseconds = rtc.datetime()
         clocktime = "%d:%d:%d" % (hour, minutes, seconds)
-        if temp > oldtemp+t_temp or temp < oldtemp-t_temp:
-            payload = json.dumps({'time':clocktime, 'alert':"ALERT: TEMPERATURE"})
-            client.publish('/esys/mdeded/ALERT/',bytes(payload,'utf-8'))
+        #Temperature Alert
+        if temp > max_temp or temp < min_temp:
+            payload = json.dumps({'time': clocktime, 'alert': "ALERT: TEMPERATURE"})
+            client.publish('/esys/mdeded/ALERT/', bytes(payload, 'utf-8'))
+        #Humidity Alert
+        if humid > max_humid or humid < min_humid:
+            payload = json.dumps({'time': clocktime, 'alert': "ALERT: HUMIDITY"})
+            client.publish('/esys/mdeded/ALERT/', bytes(payload, 'utf-8'))
+        #Knock Alert
         if knock:
-            payload = json.dumps({'time':clocktime, 'alert':"ALERT: TEMPERATURE"})
-            client.publish('/esys/mdeded/ALERT/',bytes(payload,'utf-8'))
+            payload = json.dumps({'time':clocktime, 'alert': "ALERT: KNOCK"})
+            client.publish('/esys/mdeded/ALERT/', bytes(payload, 'utf-8'))
 
-        if temp > oldtemp+t_temp or temp < oldtemp-t_temp or knock:
-            payload = json.dumps({'name':'mdeded', 'time':clocktime, 'temp':temp, 'accel':knock, 'humid':humidity})
+        # If there are any changes to the data, will then send complete data at that time
+        if temp > oldtemp+d_temp or temp < oldtemp-d_temp or humid > oldhumid+d_humid or humid < oldhumid-d_humid or knock:
+            payload = json.dumps({'name': 'mdeded/01', 'time':clocktime, 'temp': temp, 'knock': knock, 'humid': humid})
             print(payload)
-            client.publish('/esys/mdeded/data/',bytes(payload,'utf-8'))
+            client.publish('/esys/mdeded/data/', bytes(payload, 'utf-8'))
             oldtemp = temp
-        knock = False
+            oldhumid = humid
 
 
 print("Waiting for button")
@@ -161,7 +172,7 @@ print(sta_if.isconnected())
 
 
 #CLIENT_ID = machine.unique_id()
-client = MQTTClient('50688','192.168.0.10')
+client = MQTTClient('50688', '192.168.0.10')
 client.set_callback(sub_msg)
 client.connect()
 time.sleep(0.5)
@@ -169,14 +180,14 @@ client.subscribe("esys/time")
 print("Waiting for time")
 client.wait_msg()
 
-#Subscribes to topic which user passes threshold values to
-client.subscribe("/esys/mdeded/thresholds/")
-print("Waiting for thresholds")
-while t_temp == 0:
+#Subscribes to topic which user passes input values to
+client.subscribe("/esys/mdeded/inputs/")
+print("Waiting for inputs")
+while d_temp == 0:
     client.wait_msg()
 
-print("thresholds:\n%f\n%f\n%f\n" % (t_temp, t_accel, t_humid))
-#turn on LED to represent thresholds ave been received
+print("Inputs:\n%f\n%f\n%f\n" % (d_temp, d_accel, d_humid))
+#turn on LED to represent inputs ave been received
 LED.on()
 #Waits until button is pressed before starting log
 print("Waiting for button")

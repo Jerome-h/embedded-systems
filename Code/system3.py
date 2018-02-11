@@ -12,9 +12,9 @@ LED = Pin(14, Pin.OUT)
 
 rtc = machine.RTC()
 
-global t_accel, t_temp, t_humid
+global d_accel, d_temp, d_humid
 
-t_accel, t_temp, t_humid = float(0), float(0), float(0)
+d_accel, d_temp, d_humid = float(0), float(0), float(0)
 
 def readtemp():
     #send the read temperature command
@@ -45,7 +45,7 @@ def readhum():
     return humfinal
 
 def sub_msg(topic, msg):
-    global t_accel, t_temp, t_humid
+    global d_accel, d_temp, d_humid
     if topic.decode('utf-8') == "esys/time":
         print(msg.decode('utf-8'))
         clock = msg.decode('utf-8')
@@ -70,7 +70,7 @@ def sub_msg(topic, msg):
         t_humid = thresholds["humid"]
 
 def log():
-    global t_accel, t_temp, t_humid
+    global d_accel, d_temp, d_humid
     oldtemp = 0
     oldhum = 0
     oldx=0
@@ -171,10 +171,10 @@ client.wait_msg()
 #Subscribes to topic which user passes threshold values to
 client.subscribe("/esys/mdeded/thresholds/")
 print("Waiting for thresholds")
-while t_temp == 0:
+while d_temp == 0:
     client.wait_msg()
 
-print("thresholds:\n%f\n%f\n%f\n" % (t_temp, t_accel, t_humid))
+print("thresholds:\n%f\n%f\n%f\n" % (d_temp, d_accel, d_humid))
 #turn on LED to represent thresholds ave been received
 LED.on()
 #Waits until button is pressed before starting log

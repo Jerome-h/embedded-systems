@@ -7,6 +7,7 @@ import json
 #from matplotlib import pyplot as plt
 #matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import numpy as np
 
 global oldmsg
 global valCorrect
@@ -16,15 +17,16 @@ temps = []
 #times = []
 
 
-def graph(temps,refresh):
+def graph(temps,humids,mintemp,maxtemp,minhumid,maxhumid,refresh):
     #dates = matplotlib.dates.date2num(times)
     #plt.plot_date(dates, temps,'r',label='^C',marker='o')
-    plt.plot(temps,'r',label='^C',marker='o')
-    plt.legend()
-    axes = plt.gca()
-    plt.draw()
-    plt.pause(refresh)
-    plt.clf()
+    ax1=plt.subplots()
+    # plt.plot(temps,'r',label='^C',marker='o')
+    # plt.legend()
+    # axes = plt.gca()
+    # plt.draw()
+    # plt.pause(refresh)
+    # plt.clf()
 #dates = matplotlib.dates.date2num(times)
 #matplotlib.pyplot.plot_date(dates, temps)
 
@@ -54,9 +56,9 @@ def on_message(client, userdata, msg):
         #print("time: " + [data["time"]])
         #print("temp: " + [data["time"]])
         #print("humid: " + [data["humid"]])
-        with open('data.csv', 'a') as csvfile:
+        with open(data['name'] + '.csv', 'a') as csvfile:
             datafile = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-            datafile.writerow([data["time"]] + [data["temp"]] + [data["humid"]])
+            datafile.writerow([data["name"]] + [data["time"]] + [data["temp"]] + [data["humid"]])
 
     #try:
     #    value = int(msg.payload.split(":")[0])

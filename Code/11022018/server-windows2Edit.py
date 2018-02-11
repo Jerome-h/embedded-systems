@@ -76,7 +76,7 @@ client.on_message = on_message
 
 client.connect("192.168.0.10", 1883, 60)
 
-while valCorrect == False:
+while valCorrect != True:
     accel=float(input("Enter accelerometer threshold: "))
     temp=float(input("Enter temperature threshold: "))
     humid=float(input("Enter humidity threshold: "))

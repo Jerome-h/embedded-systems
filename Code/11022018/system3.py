@@ -144,7 +144,7 @@ def log():
 
         # If there are any changes to the data, will then send complete data at that time
         if temp > oldtemp+d_temp or temp < oldtemp-d_temp or humid > oldhumid+d_humid or humid < oldhumid-d_humid or knock:
-            payload = json.dumps({'name': 'mdeded/01', 'time':clocktime, 'temp': temp, 'knock': knock, 'humid': humid})
+            payload = json.dumps({'name': 'mdeded-01', 'time': clocktime, 'temp': temp, 'knock': knock, 'humid': humid})
             print(payload)
             client.publish('/esys/mdeded/data/', bytes(payload, 'utf-8'))
             oldtemp = temp

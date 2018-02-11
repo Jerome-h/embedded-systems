@@ -58,7 +58,7 @@ def sub_msg(topic, msg):
         hours = timedata.split(":")[0]
         minutes = timedata.split(":")[1]
         seconds = timedata.split(":")[2]
-    
+
         rtc.datetime((int(year), int(month), int(day), 0, int(hours), int(minutes), int(seconds), 0))
         print(rtc.datetime())
         #print(rtc.hours)

@@ -12,11 +12,6 @@ LED = Pin(14, Pin.OUT)
 
 rtc = machine.RTC()
 
-min_temp = inputs["mintemp"]
-max_temp = inputs["maxtemp"]
-min_humid = inputs["minhumid"]
-max_humid = inputs["maxhumid"]
-
 global d_accel, d_temp, d_humid
 global min_temp, max_temp, min_humid, max_humid
 global oldx , oldy, oldz

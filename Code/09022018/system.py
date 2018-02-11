@@ -112,7 +112,7 @@ client.wait_msg()
 # Turn off LED to save power
 #LED.off()
 #Start Logging data
-#log(t_temp, t_accel)
+#log(d_temp, d_accel)
 
 def run():
     year, month, day, weekday, hour, minutes, seconds, subseconds = rtc.datetime()

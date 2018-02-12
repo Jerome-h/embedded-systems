@@ -13,10 +13,7 @@ LED = Pin(14, Pin.OUT)
 rtc = machine.RTC()
 
 global d_accel, d_temp, d_humid
-global oldx , oldy, oldz
-
 d_accel, d_temp, d_humid = float(0), float(0), float(0)
-oldx , oldy, oldz = 0, 0, 0
 
 def readtemp():
     #send the read temperature command
@@ -46,9 +43,6 @@ def readhumid():
     return humidfinal
 
 def readknock():
-    global d_accel, oldx, oldy, oldz
-    xknock, yknock, zknock, knock = False, False, False, False
-
     i2cport.writeto(0x18, bytearray([0x20, 0x97]))
     xsmall = i2cport.readfrom_mem(0x18, 0x28, 1)
     xbig = i2cport.readfrom_mem(0x18, 0x29, 1)
@@ -71,20 +65,8 @@ def readknock():
     if zaccel > 0x7fff:
         zaccel = zaccel - 0x10000
 
-    if xaccel > oldx + d_accel or xaccel < oldx - d_accel:
-        xknock = True
-        oldx = xaccel
-    if yaccel > oldy + d_accel or yaccel < oldy - d_accel:
-        yknock = True
-        oldy = yaccel
-    if zaccel > oldz + d_accel or zaccel < oldz - d_accel:
-        zknock = True
-        oldz = zaccel
-
-    if xknock or yknock or zknock:
-        knock = True
-        # print("knocked")
-    return knock
+    accel = [xaccel, yaccel, zaccel]
+    return accel
 
 def sub_msg(topic, msg):
     global d_accel, d_temp, d_humid
@@ -113,23 +95,46 @@ def sub_msg(topic, msg):
 
 
 def log():
-    global d_temp, d_humid
+    global d_temp, d_humid, d_accel
     oldtemp = 0
     oldhumid = 0
+    oldx, oldy, oldz = 0, 0, 0
     while True:
+        xknock, yknock, zknock, knock = False, False, False, False
+        tempchange = False
+        humidchange = False
+
         temp = readtemp()-10
         humid = readhumid()
-        knock = readknock()
-
+        accel = readknock()
+        #Detect if there has been a knock
+        if accel[0] > oldx + d_accel or accel[0] < oldx - d_accel:
+            xknock = True
+            oldx = accel[0]
+        if accel[1] > oldy + d_accel or accel[1] < oldy - d_accel:
+            yknock = True
+            oldy = accel[1]
+        if accel[2] > oldz + d_accel or accel[2] < oldz - d_accel:
+            zknock = True
+            oldz = accel[2]
+        if xknock or yknock or zknock:
+            knock = True
+            # print("knocked")
+        #Detect if there has been a temp change
+        if temp > oldtemp + d_temp or temp < oldtemp - d_temp:
+            tempchange = True
+            oldtemp = temp
+        # Detect if there has been a humidity change
+        if humid > oldhumid+d_humid or humid < oldhumid-d_humid:
+            humidchange = True
+            oldhumid = humid
         year, month, day, weekday, hour, minutes, seconds, subseconds = rtc.datetime()
         clocktime = "%d:%d:%d" % (hour, minutes, seconds)
         # If there are any changes to the data, will then send complete data at that time
-        if temp > oldtemp+d_temp or temp < oldtemp-d_temp or humid > oldhumid+d_humid or humid < oldhumid-d_humid or knock:
+        if tempchange or humidchange or knock:
             payload = json.dumps({'name': 'mdeded-01', 'time': clocktime, 'temp': temp, 'knock': knock, 'humid': humid})
             print(payload)
             client.publish('/esys/mdeded/data/', bytes(payload, 'utf-8'))
-            oldtemp = temp
-            oldhumid = humid
 
 
 print("Waiting for button")

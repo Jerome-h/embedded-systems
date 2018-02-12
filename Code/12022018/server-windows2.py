@@ -40,7 +40,7 @@ def graph(temps, humids, refresh):
     ax2.plot(humids,'b', label='%', marker='x')
     ax2.set_ylabel("Humidity /%")
     ax2.tick_params('y', colors='b')
-    ax2.set_ylim([minhumid,maxhumid])
+    ax2.set_ylim([minhumid, maxhumid])
 
     #fig.close()
     #plt.legend()

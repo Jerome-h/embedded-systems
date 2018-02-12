@@ -110,32 +110,34 @@ def log():
         #Detect if there has been a knock
         if accel[0] > oldx + d_accel or accel[0] < oldx - d_accel:
             xknock = True
-            oldx = accel[0]
         if accel[1] > oldy + d_accel or accel[1] < oldy - d_accel:
             yknock = True
-            oldy = accel[1]
         if accel[2] > oldz + d_accel or accel[2] < oldz - d_accel:
             zknock = True
-            oldz = accel[2]
         if xknock or yknock or zknock:
             knock = True
             # print("knocked")
+
         #Detect if there has been a temp change
         if temp > oldtemp + d_temp or temp < oldtemp - d_temp:
             tempchange = True
-            oldtemp = temp
+
         # Detect if there has been a humidity change
         if humid > oldhumid+d_humid or humid < oldhumid-d_humid:
             humidchange = True
-            oldhumid = humid
+
         year, month, day, weekday, hour, minutes, seconds, subseconds = rtc.datetime()
         clocktime = "%d:%d:%d" % (hour, minutes, seconds)
-        # If there are any changes to the data, will then send complete data at that time
+        # If there are any changes to the data, will then send complete data at that time. Updates old values
         if tempchange or humidchange or knock:
             payload = json.dumps({'name': 'mdeded-01', 'time': clocktime, 'temp': temp, 'knock': knock, 'humid': humid})
             print(payload)
             client.publish('/esys/mdeded/data/', bytes(payload, 'utf-8'))
-
+            oldx = accel[0]
+            oldy = accel[1]
+            oldz = accel[2]
+            oldtemp = temp
+            oldhumid = humid
 
 print("Waiting for button")
 #Waits until button is pressed before opening communications

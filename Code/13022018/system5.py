@@ -8,7 +8,9 @@ from machine import Pin,I2C
 
 i2cport = I2C(scl=Pin(5), sda=Pin(4), freq=100000)
 button = Pin(16, Pin.IN)
-LED = Pin(14, Pin.OUT)
+LED_G = Pin(14, Pin.OUT)
+LED_R = Pin(0, Pin.OUT)
+LED_R.on()
 
 rtc = machine.RTC()
 
@@ -16,9 +18,7 @@ global d_accel, d_temp, d_humid
 d_accel, d_temp, d_humid = float(0), float(0), float(0)
 
 def readtemp():
-    i2cport = I2C(scl=Pin(5), sda=Pin(4), freq=100000)
-
-        #send the read temperature command
+    #send the read temperature command
     i2cport.writeto(0x44,bytearray([0xf3]))
 
     time.sleep(0.5)
@@ -130,11 +130,11 @@ def log():
         if humid > oldhumid+d_humid or humid < oldhumid-d_humid:
             humidchange = True
 
-        year, month, day, weekday, hour, minutes, seconds, subseconds = rtc.datetime()
-        clocktime = "%d:%d:%d" % (hour, minutes, seconds)
+        #year, month, day, weekday, hour, minutes, seconds, subseconds = rtc.datetime()
+        #clocktime = "%d:%d:%d" % (hour, minutes, seconds)
         # If there are any changes to the data, will then send complete data at that time. Updates old values
         if tempchange or humidchange or knock:
-            payload = json.dumps({'name': 'mdeded-01', 'time': clocktime, 'temp': temp, 'knock': knock, 'humid': humid})
+            payload = json.dumps({'name': 'mdeded-01', 'time': rtc.datetime(), 'temp': temp, 'knock': knock, 'humid': humid})
             print(payload)
             client.publish('/esys/mdeded/data/', bytes(payload, 'utf-8'))
             oldx = accel[0]
@@ -170,18 +170,19 @@ client.wait_msg()
 #Subscribes to topic which user passes input values to
 client.subscribe("/esys/mdeded/inputs/")
 print("Waiting for inputs")
+LED_R.off()
 while d_temp == 0:
     client.wait_msg()
-
+LED_R.on()
 print("Inputs:\n%f\n%f\n%f\n" % (d_temp, d_accel, d_humid))
-#turn on LED to represent inputs ave been received
-LED.on()
+#turn on LED_G to represent inputs ave been received
+LED_G.on()
 #Waits until button is pressed before starting log
 print("Waiting for button")
 while button.value() == 0:
     pass
-# Turn off LED to save power
-LED.off()
+# Turn off LED_G to save power
+LED_G.off()
 #Start Logging data
 print("logging")
 log()

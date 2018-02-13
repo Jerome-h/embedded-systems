@@ -8,6 +8,7 @@ import json
 #from matplotlib import pyplot as plt
 #matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import matplotlib
 import numpy as np
 
 
@@ -24,27 +25,32 @@ times = []
 
 plt.ion()
 fig, ax1 = plt.subplots()
-fig.canvas.set_window_title('Data')
+fig.canvas.set_window_title('Data Plot')
+plt.title("mdeded-01 Sensor Data", fontsize=28)
 
 
 
 def graph(times, temps, humids, refresh):
     global min_temp, max_temp, min_humid, max_humid
 
-    ax1.plot(times, temps,'r',label='^C',marker='o')
-    plt.gcf().autofmt_xdate()
-    ax1.set_ylabel("Temperature/^C")
-    ax1.tick_params('y', colors='r')
+    l1, = ax1.plot(times, temps, 'r', label='^C', marker='o')
+    ax1.set_ylabel("Temperature/^C", fontsize=18)
+    ax1.set_xlabel("Time Elapsed /s", fontsize=18)
+    ax1.tick_params('y', colors='r', labelsize=16)
+    ax1.tick_params('x', labelsize=16)
     ax1.set_ylim([min_temp,max_temp])
-    #plt.legend(bbox_to_anchor=(0., 1.02,1.,.102), loc=3, ncol=2, mode="expand", borderaxespad=0.)
+    handles1, labels1 = ax1.get_legend_handles_labels()
+    #ax1.legend(handles1, labels1)
 
     ax2 = ax1.twinx()
-    ax2.plot(humids,'b', label='%', marker='x')
-    ax2.set_ylabel("Humidity /%")
-    ax2.tick_params('y', colors='b')
+    l2, = ax2.plot(times, humids,'b', label='%', marker='x')
+    ax2.set_ylabel("Humidity /%", fontsize=18)
+    ax2.tick_params('y', colors='b', labelsize=16)
     ax2.set_ylim([min_humid, max_humid])
+    handles2, labels2 = ax2.get_legend_handles_labels()
+    #ax2.legend(handles2, labels2)
 
-
+    plt.legend([l1, l2],["Temperature","Humidity"])
     plt.draw()
     plt.pause(refresh)
 
@@ -81,37 +87,19 @@ def on_connect(client, userdata, flags, rc):
 
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
-    #global oldmsg
-    #print(msg.topic+" "+str(msg.payload))
-    #print(msg.topic+" "+msg.payload.decode('utf-8'))
 
     if msg.topic == "/esys/mdeded/data/" :
         #data = json.loads(str(msg.payload))
         data = json.loads(msg.payload)
-        print(data["time"])
-        year, month, day, weekday, hour, minutes, seconds, subseconds = data["time"]
-        clocktime = "%d:%d:%d" % (hour, minutes, seconds)
-        alert(data["temp"], data["humid"], data["knock"], clocktime)
+        alert(data["temp"], data["humid"], data["knock"], data["time"])
         temps.append(data["temp"])
         humids.append(data["humid"])
-        times.append(data["time"])
+        times.append(data["secs"])
         graph(times, temps, humids, 0.1)
-        #print("time: " + [data["time"]])
-        #print("temp: " + [data["time"]])
-        #print("humid: " + [data["humid"]])
+
         with open(data['name'] + '.csv', 'a') as csvfile:
             datafile = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
             datafile.writerow([data["name"]] + [data["time"]] + [data["temp"]] + [data["humid"]])
-
-    #try:
-    #    value = int(msg.payload.split(":")[0])
-    #    if value > oldmsg :
-    #        reply = "Received: "+str(msg.payload)
-    #        client.publish("/esys/mdeded/", payload=reply, qos=0, retain=False)
-    #        oldmsg=value+1
-    #except ValueError:
-    #    pass
-
 
 
 

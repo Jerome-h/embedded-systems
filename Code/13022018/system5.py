@@ -100,6 +100,7 @@ def sub_msg(topic, msg):
 
 def log():
     global d_temp, d_humid, d_accel
+    offset=time.ticks_ms()/1000
     oldtemp = 0
     oldhumid = 0
     oldx, oldy, oldz = 0, 0, 0
@@ -130,11 +131,12 @@ def log():
         if humid > oldhumid+d_humid or humid < oldhumid-d_humid:
             humidchange = True
 
-        #year, month, day, weekday, hour, minutes, seconds, subseconds = rtc.datetime()
-        #clocktime = "%d:%d:%d" % (hour, minutes, seconds)
+        year, month, day, weekday, hour, minutes, seconds, subseconds = rtc.datetime()
+        clocktime = "%d:%d:%d" % (hour, minutes, seconds)
         # If there are any changes to the data, will then send complete data at that time. Updates old values
         if tempchange or humidchange or knock:
-            payload = json.dumps({'name': 'mdeded-01', 'time': rtc.datetime(), 'temp': temp, 'knock': knock, 'humid': humid})
+            secs=time.ticks_ms()/1000
+            payload = json.dumps({'name': 'mdeded-01', 'time': clocktime, 'temp': temp, 'knock': knock, 'humid': humid, 'secs': secs-offset})
             print(payload)
             client.publish('/esys/mdeded/data/', bytes(payload, 'utf-8'))
             oldx = accel[0]
@@ -147,6 +149,7 @@ print("Waiting for button")
 #Waits until button is pressed before opening communications
 while button.value() == 0:
     pass
+LED_R.off()
 print("connecting")
 ap_if = network.WLAN(network.AP_IF)
 ap_if.active(False)
@@ -166,11 +169,11 @@ time.sleep(0.5)
 client.subscribe("esys/time")
 print("Waiting for time")
 client.wait_msg()
-
+LED_G.on()
 #Subscribes to topic which user passes input values to
 client.subscribe("/esys/mdeded/inputs/")
 print("Waiting for inputs")
-LED_R.off()
+
 while d_temp == 0:
     client.wait_msg()
 LED_R.on()

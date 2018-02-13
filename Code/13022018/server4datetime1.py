@@ -20,18 +20,19 @@ min_temp, max_temp, min_humid, max_humid = float(0), float(0), float(0), float(0
 #oldmsg=0
 temps = []
 humids = []
-#times = []
+times = []
+
+plt.ion()
+fig, ax1 = plt.subplots()
+fig.canvas.set_window_title('Data')
 
 
 def graph(temps, humids, refresh):
     global min_temp, max_temp, min_humid, max_humid
-    #dates = matplotlib.dates.date2num(times)
-    #plt.plot_date(dates, temps,'r',label='^C',marker='o')
-    plt.ion()
-    fig, ax1 = plt.subplots()
-    fig.canvas.set_window_title('Data')
+
     timesformat=str(times[3] ':' + times[4] ':' + times[5])
     ax1.plot(timesformat, temps,'r',label='^C',marker='o')
+    plt.gcf().autofmt_xdate()
     ax1.set_ylabel("Temperature/^C")
     ax1.tick_params('y', colors='r')
     ax1.set_ylim([min_temp,max_temp])
@@ -42,7 +43,6 @@ def graph(temps, humids, refresh):
     ax2.set_ylabel("Humidity /%")
     ax2.tick_params('y', colors='b')
     ax2.set_ylim([min_humid, max_humid])
-
 
 
     plt.draw()
@@ -88,12 +88,14 @@ def on_message(client, userdata, msg):
     if msg.topic == "/esys/mdeded/data/" :
         #data = json.loads(str(msg.payload))
         data = json.loads(msg.payload)
-        alert(data["temp"], data["humid"], data["knock"], data["time"])
+        print(data["time"])
+        year, month, day, weekday, hour, minutes, seconds, subseconds = data["time"]
+        clocktime = "%d:%d:%d" % (hour, minutes, seconds)
+        alert(data["temp"], data["humid"], data["knock"], clocktime)
         temps.append(data["temp"])
         humids.append(data["humid"])
-        #datetime.strptime("02/05/2017","%m/%d/%Y")
-        #times.append(data["time"])
-        graph(temps, humids, 0.5)
+        times.append(data["time"])
+        graph(times, temps, humids, 0.1)
         #print("time: " + [data["time"]])
         #print("temp: " + [data["time"]])
         #print("humid: " + [data["humid"]])
@@ -134,6 +136,8 @@ while valCorrect != True:
         valCorrect = True
 inputs = json.dumps({'accel': accel, 'temp': temp, 'humid': humid})
 client.publish('/esys/mdeded/inputs/', bytes(inputs, 'utf-8'))
+
+
 
 
 

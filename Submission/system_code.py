@@ -89,7 +89,7 @@ def readaccel():
 
     # convert the byte array to int
     xaccel = int.from_bytes(x, 'big')
-    if xaccel > 0x7fff:                                 # convert from 2's complement
+    if xaccel > 0x7fff:                 #convert from 2's complement
         xaccel = xaccel - 0x10000
 
     # repeat for y data
@@ -193,7 +193,8 @@ def log():
             secs=time.ticks_ms()/1000
 
             # create json object to be sent
-            payload = json.dumps({'name': 'mdeded-01', 'time': clocktime, 'temp': temp, 'knock': knock, 'humid': humid, 'secs': secs-offset})
+            payload = json.dumps({'name': 'mdeded-01', 'time': clocktime,
+                'temp': temp, 'knock': knock, 'humid': humid, 'secs': secs-offset})
             print(payload)
             client.publish('/esys/mdeded/data/', bytes(payload, 'utf-8'))   # publish message
 

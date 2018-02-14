@@ -1,12 +1,13 @@
+### This code is to be run on the server and takes as user inputs the thresholds and
+### transmits these values to the IoT devices. It then logs and saves all data 
+### received from the devices in unique comma-separated values text files. It also
+### creates a graph of the temperature and humidity data and updates this live.
+
 import paho.mqtt.client as mqtt
 import time
 import datetime
 import csv
 import json
-#import matplotlib
-#import pyplot as plt
-#from matplotlib import pyplot as plt
-#matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib
 import numpy as np
@@ -23,16 +24,18 @@ temps = []
 humids = []
 times = []
 
+#initialise the graph here and when the graph() function is called it only updates it
 plt.ion()
 fig, ax1 = plt.subplots()
 fig.canvas.set_window_title('Data Plot')
 plt.title("mdeded-01 Sensor Data", fontsize=28)
 
-
-
+#------------------------------------------------------------------------------------
+#Function to update the graph
 def graph(times, temps, humids, refresh):
     global min_temp, max_temp, min_humid, max_humid
 
+    #create the left hand y-axis as the temperature values
     l1, = ax1.plot(times, temps, 'r', label='^C', marker='o')
     ax1.set_ylabel("Temperature/^C", fontsize=18)
     ax1.set_xlabel("Time Elapsed /s", fontsize=18)
@@ -40,8 +43,8 @@ def graph(times, temps, humids, refresh):
     ax1.tick_params('x', labelsize=16)
     ax1.set_ylim([min_temp,max_temp])
     handles1, labels1 = ax1.get_legend_handles_labels()
-    #ax1.legend(handles1, labels1)
 
+    #create the right hand y-axis as the humidity values
     ax2 = ax1.twinx()
     l2, = ax2.plot(times, humids,'b', label='%', marker='x')
     ax2.set_ylabel("Humidity /%", fontsize=18)

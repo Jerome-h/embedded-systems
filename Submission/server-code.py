@@ -96,6 +96,9 @@ def on_connect(client, userdata, flags, rc):
     client.subscribe("/esys/mdeded/")           # main topic
     client.subscribe("/esys/mdeded/data/")      # topic to listen for sensor data
     client.subscribe("/esys/mdeded/ALERT/")     # topic to send alerts on
+#----------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------
+
 
 
 #----------------------------------------------------------------------------------------

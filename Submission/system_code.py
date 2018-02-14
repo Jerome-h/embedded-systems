@@ -89,7 +89,7 @@ def readaccel():
 
     # convert the byte array to int
     xaccel = int.from_bytes(x, 'big')
-    if xaccel > 0x7fff:                 #convert from 2's complement
+    if xaccel > 0x7fff:                                 # convert from 2's complement
         xaccel = xaccel - 0x10000
 
     # repeat for y data

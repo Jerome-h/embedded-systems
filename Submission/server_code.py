@@ -139,7 +139,7 @@ while valCorrect != True:
     min_humid = float(input("Enter minimum humidity: "))
     max_humid = float(input("Enter maximum humidity: "))
 
-    #print input to ask user if correct
+    # print input to ask user if correct
     print("Threshold values are: Accelerometer = "+ str(accel) + ", temperature = "
         + str(temp)+", humidity = "+ str(humid))
 
@@ -155,5 +155,5 @@ while valCorrect != True:
 inputs = json.dumps({'accel': accel, 'temp': temp, 'humid': humid})
 client.publish('/esys/mdeded/inputs/', bytes(inputs, 'utf-8'))
 
-#function to indefinitely listen for messages, also handles reconnects automatically:
+# function to indefinitely listen for messages, also handles reconnects automatically:
 client.loop_forever()

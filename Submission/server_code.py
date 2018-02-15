@@ -117,7 +117,7 @@ def on_message(client, userdata, msg):
         # append new received data to device's unique csv file
         with open(data['name'] + '.csv', 'a') as csvfile:
             datafile = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-            datafile.writerow([data["name"]] + [data["time"]] + [data["temp"]] + [data["humid"]])
+            datafile.writerow([data["name"]] + [data["time"]] + [data["temp"]] + [data["humid"]] + [data["knock"]])
 #----------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------
 

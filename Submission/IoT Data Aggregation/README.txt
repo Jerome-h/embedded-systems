@@ -1,2 +1,2 @@
 This code stands separately to the system and server code. It would run on the server and read the outputted .csv data log files.
-It demonstrates the possibility of processing data from a large number of devices working simultaneously in a swarm. It analyses the data and if a knock is detected 
+It demonstrates the possibility of processing data from a large number of devices working simultaneously in a swarm. It analyses the data and if a knock is detected on less than 35% of the devices at a particular time, if detects and prints this. This simulates if for example a few containers become loose or unstable. It also detects if a knok is registered by over 95% of the devices, this symbolises an issue in the shipment for instance the lorry crashing.

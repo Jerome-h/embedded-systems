@@ -193,7 +193,7 @@ def log():
             secs=time.ticks_ms()/1000
 
             # create json object to be sent
-            payload = json.dumps({'name': 'mdeded-01', 'time': clocktime,
+            payload = json.dumps({'name': 'mdeded-07', 'time': clocktime,
                 'temp': temp, 'knock': knock, 'humid': humid, 'secs': secs-offset})
             print(payload)
             client.publish('/esys/mdeded/data/', bytes(payload, 'utf-8'))   # publish message

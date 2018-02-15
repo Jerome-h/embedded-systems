@@ -6,6 +6,8 @@ Team Members:
   Luke Bussell
   Karmanya Singh
   
+Team website: karmanya97.wixsite.com/vishnu
+  
 Files included:
   main.py         -  script to put on ESP8266 to run system_code.py on startup
   system_code.py  -  the code that runs on the ESP8266 device

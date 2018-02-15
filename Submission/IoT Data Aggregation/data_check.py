@@ -58,7 +58,10 @@ for entry in range(len(knocks)):
 print("\n")
 
 for entry in range(len(knocks)):
-    if len(knocks[entry])-1  >= 0.95*len(devices):
-        print("\nAt time: " + str(knocks[entry][0]) + " at least 95% of the containers were knocked, possible shipment incident")
+    if len(knocks[entry])-1  >= 0.90*len(devices):
+        percent = (len(knocks[entry])-1)/len(devices)
+        percent = percent*100
+        percent = int(round(percent))
+        print("\nAt time: " + str(knocks[entry][0]) + ", " + str(percent) +" % of the containers were knocked, possible shipment incident")
 
 print("\n")
